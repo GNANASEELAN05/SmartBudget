@@ -5,7 +5,7 @@ import { getDatabase, ref, get } from "firebase/database";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-import Dashboard from "C:/Users/Gnanaseelan V/Downloads/smart-budget-tracker/frontend/src/pages/Dashboard.jsx";
+import Dashboard from "./Dashboard";
 import BudgetsOverview from "./BudgetsOverview";
 import Categories from "./Categories";
 import Analytics from "./Analytics";

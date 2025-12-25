@@ -13,7 +13,9 @@ firebase-debug.*.log*
 
 # Firebase service account (SECRET) — MUST be ignored
 backend/src/main/resources/firebase-service-account.json
+frontend/src/main/resources/firebase.js
 
+frontend/node_modules
 # VS Code
 .vscode/
 
@@ -49,7 +51,7 @@ node_modules/
 *.tgz
 
 # Env files (secrets)
-.env
+frontend/.env
 
 # dataconnect generated files
 .dataconnect

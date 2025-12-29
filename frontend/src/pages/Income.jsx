@@ -1,4 +1,3 @@
-// frontend/src/pages/Income.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {

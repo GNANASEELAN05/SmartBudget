@@ -1,4 +1,3 @@
-// frontend/src/pages/NetWorth.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue, off, set, remove } from "firebase/database";

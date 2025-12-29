@@ -1,4 +1,3 @@
-// frontend/src/pages/Help.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,

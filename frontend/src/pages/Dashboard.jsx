@@ -1,4 +1,3 @@
-// frontend/src/pages/DashboardFixed.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue, off } from "firebase/database";

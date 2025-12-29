@@ -1,4 +1,3 @@
-// frontend/src/pages/Savings.jsx
 import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 import {

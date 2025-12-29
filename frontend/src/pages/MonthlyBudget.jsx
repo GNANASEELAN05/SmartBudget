@@ -1,4 +1,3 @@
-// frontend/src/pages/MonthlyBudget.jsx
 import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 import {
@@ -55,6 +54,23 @@ export default function MonthlyBudget({
   const [selectedDate, setSelectedDate] = useState({});
 
   const pad = (v) => String(v).padStart(2, "0");
+
+  /* ================= CONFIRM MODAL STATE ================= */
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    showCancel: true,
+    confirmText: "OK",
+    cancelText: "Cancel",
+    onConfirm: null,
+  });
+
+  const openModal = ({ title = "", message = "", showCancel = true, confirmText = "OK", cancelText = "Cancel", onConfirm = null }) => {
+    setModal({ open: true, title, message, showCancel, confirmText, cancelText, onConfirm });
+  };
+
+  const closeModal = () => setModal((m) => ({ ...m, open: false }));
 
   /* ================= AUTO LOAD MONTHS ================= */
   useEffect(() => {
@@ -211,9 +227,63 @@ export default function MonthlyBudget({
   };
 
   const deleteMonth = async (k) => {
-    if (!window.confirm("Delete this month's budget?")) return;
-    await remove(ref(db, `users/${user.uid}/monthlyBudgets/${k}`));
-    setViewMonth(null);
+    // Open modal instead of window.confirm
+    openModal({
+      title: "Delete this month's budget",
+      message: "Are you sure you want to delete this month's entire budget and its spends? This action cannot be undone.",
+      showCancel: true,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          // 1) read this month's spends once and remove any linked expense entries
+          const spendsRef = ref(db, `users/${user.uid}/monthlyBudgets/${k}/spends`);
+          const handler = onValue(spendsRef, async (snap) => {
+            const data = snap.val() || {};
+            const removes = [];
+
+            Object.entries(data).forEach(([spendId, spendObj]) => {
+              // if spend has linkedExpenseId remove that expense
+              const linkedId = spendObj && (spendObj.linkedExpenseId || spendObj.linkedExpense || spendObj.expenseId);
+              if (linkedId) {
+                removes.push(
+                  remove(ref(db, `users/${user.uid}/expenses/${linkedId}`)).catch((err) => {
+                    console.error("Failed to remove linked expense", linkedId, err);
+                  })
+                );
+              }
+            });
+
+            // wait for all linked-expense removals to complete (if any)
+            try {
+              await Promise.all(removes);
+            } catch (err) {
+              // already logged individually, continue
+              console.error("Error removing linked expenses:", err);
+            }
+
+            // detach listener for spends
+            off(spendsRef, "value", handler);
+
+            // 2) remove the entire monthlyBudgets/{k} node
+            await remove(ref(db, `users/${user.uid}/monthlyBudgets/${k}`));
+
+            // 3) close modal and reset view
+            setViewMonth(null);
+            closeModal();
+          });
+        } catch (err) {
+          console.error("deleteMonth failed", err);
+          closeModal();
+          openModal({
+            title: "Delete failed",
+            message: "Failed to delete month. See console for details.",
+            showCancel: false,
+            confirmText: "OK",
+          });
+        }
+      },
+    });
   };
 
   /* ============== Sync selectedMonths when Export forces a period ============== */
@@ -532,6 +602,81 @@ export default function MonthlyBudget({
           );
         })}
       </div>
+
+      {/* ======= MODAL ======= */}
+      {modal.open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            onClick={closeModal}
+            style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }}
+          />
+
+          <div
+            style={{
+              background: "#ffffff",
+              padding: "20px",
+              borderRadius: "10px",
+              width: "420px",
+              boxShadow: "0 12px 40px rgba(2,6,23,0.2)",
+              position: "relative",
+              zIndex: 10000,
+            }}
+          >
+            <div style={{ fontWeight: 800, marginBottom: "8px", color: "#0f172a" }}>{modal.title}</div>
+            <div style={{ fontSize: "14px", color: "#334155", marginBottom: "18px" }}>{modal.message}</div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              {modal.showCancel && (
+                <button
+                  onClick={closeModal}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                    background: "white",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  {modal.cancelText}
+                </button>
+              )}
+
+              <button
+                onClick={async () => {
+                  if (typeof modal.onConfirm === "function") {
+                    await modal.onConfirm();
+                  } else {
+                    closeModal();
+                  }
+                }}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: modal.confirmText === "Delete" ? "#dc2626" : "#0f9960",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 800,
+                }}
+              >
+                {modal.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-// src/pages/Transactions.jsx  (replace the original Transactions component)
 import React, { useEffect, useMemo, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue, off } from "firebase/database";

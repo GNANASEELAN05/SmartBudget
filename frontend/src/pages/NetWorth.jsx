@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue, off, set, remove } from "firebase/database";
 import {
@@ -203,11 +203,206 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
     };
   }, [auth, db]);
 
+  // --------------- NEW: Gemini client call to generate and save trend into Firebase ---------------
+  const ranGeminiRef = useRef(false);
+
+  // helper to read possible env locations (supports Vite import.meta.env, process.env fallback and window global)
+  function getClientGeminiKey() {
+    try {
+      // Vite style
+      if (typeof import.meta !== "undefined" && import.meta.env) {
+        if (import.meta.env.VITE_GEMINI_API_KEY) return import.meta.env.VITE_GEMINI_API_KEY;
+        if (import.meta.env.GEMINI_API_KEY) return import.meta.env.GEMINI_API_KEY;
+      }
+    } catch (e) {}
+    // process.env (some bundlers)
+    try {
+      if (typeof process !== "undefined" && process.env) {
+        if (process.env.VITE_GEMINI_API_KEY) return process.env.VITE_GEMINI_API_KEY;
+        if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+        if (process.env.REACT_APP_GEMINI_API_KEY) return process.env.REACT_APP_GEMINI_API_KEY;
+      }
+    } catch (e) {}
+    // window global fallback
+    try {
+      if (typeof window !== "undefined" && window.__GEMINI_API_KEY) return window.__GEMINI_API_KEY;
+    } catch (e) {}
+    return null;
+  }
+
+  // browser-friendly Gemini call + robust parsing
+  async function callGeminiFromClient(prompt, apiKey) {
+    if (!apiKey) throw new Error("No Gemini key provided to client callGeminiFromClient");
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+    const body = {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`Gemini API error ${res.status}: ${txt}`);
+    }
+
+    const data = await res.json();
+
+    // robust text extraction (similar to server script)
+    const textCandidates = [];
+    try {
+      const candidates = data?.candidates || data?.output?.candidates;
+      if (Array.isArray(candidates) && candidates.length) {
+        for (const c of candidates) {
+          if (Array.isArray(c.content)) {
+            for (const part of c.content) {
+              if (Array.isArray(part.parts)) {
+                for (const p of part.parts) {
+                  if (typeof p.text === "string") textCandidates.push(p.text);
+                }
+              } else if (typeof part.text === "string") {
+                textCandidates.push(part.text);
+              }
+            }
+          } else if (c.content && c.content.parts) {
+            for (const p of c.content.parts) {
+              if (typeof p.text === "string") textCandidates.push(p.text);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // fallthrough
+    }
+
+    if (!textCandidates.length) textCandidates.push(JSON.stringify(data));
+
+    for (const text of textCandidates) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+
+      const m = text.match(/\[[\s\d,.\-]+\]/m);
+      if (m) {
+        try {
+          const parsed = JSON.parse(m[0]);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {}
+      }
+
+      const nums = text.match(/-?\d{2,}/g);
+      if (nums && nums.length >= 6) {
+        const last6 = nums.slice(-6).map((n) => Number(n));
+        return last6;
+      }
+    }
+
+    throw new Error("Could not parse Gemini response into an integer array. Raw candidates: " + JSON.stringify(textCandidates));
+  }
+
+  useEffect(() => {
+    // run only once per session, only when user & db present and not demo
+    if (ranGeminiRef.current) return;
+    if (!user || !db) return;
+    if (demoMode) return;
+
+    // if trend already present, skip
+    if (assets.some(a => a.id === "_generated_trend")) {
+      ranGeminiRef.current = true;
+      return;
+    }
+
+    const GEMINI_KEY = getClientGeminiKey();
+    if (!GEMINI_KEY) {
+      // nothing to do client-side
+      return;
+    }
+
+    // warn user (console) about client-side key exposure
+    console.warn("Using client-side Gemini key to generate trend. This exposes the key in browser. Prefer server-side script.");
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const totalA = assets.reduce((s, a) => s + (Number(a.value || 0)), 0);
+        const totalL = liabilities.reduce((s, l) => s + (Number(l.value || 0)), 0);
+        const netWorth = totalA - totalL;
+        const prompt = `You are an assistant that returns only a strict JSON array of 6 integer numbers.
+Generate six realistic net-worth numbers (INR) for the last 6 periods (most recent last). The user's current net worth is ${Math.round(netWorth || 0)}.
+- Each number must be an integer.
+- Keep values roughly within ±10% of current net worth.
+- Introduce small ups and downs (no perfectly straight lines).
+- Return ONLY a valid JSON array (example: [123456,123000,124500,122900,125300,124800]) and nothing else.`;
+
+        const trend = await callGeminiFromClient(prompt, GEMINI_KEY);
+
+        if (cancelled) return;
+        if (!Array.isArray(trend) || trend.length === 0) {
+          console.error("Gemini returned invalid trend:", trend);
+          return;
+        }
+
+        const trendInts = trend.map(n => Math.round(Number(n) || 0));
+
+        const ts = Date.now();
+        const assetPath = `users/${user.uid}/assets/_generated_trend`;
+        const liabilityPath = `users/${user.uid}/liabilities/_generated_trend_zero`;
+
+        const assetPayload = {
+          id: "_generated_trend",
+          name: "_generated trend (gemini)",
+          value: trendInts[trendInts.length - 1] || 0,
+          history: trendInts,
+          createdAt: ts,
+          updatedAt: ts,
+        };
+
+        const liabilityPayload = {
+          id: "_generated_trend_zero",
+          name: "_generated trend (zero)",
+          value: 0,
+          history: Array(trendInts.length).fill(0),
+          createdAt: ts,
+          updatedAt: ts,
+        };
+
+        await set(ref(db, assetPath), assetPayload);
+        await set(ref(db, liabilityPath), liabilityPayload);
+        ranGeminiRef.current = true;
+        // assets listener will pick up the new generated asset and re-render
+      } catch (e) {
+        console.error("Gemini generation failed (client):", e);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, db, assets, liabilities, demoMode]);
+
+  // --------------- END NEW Gemini client logic ---------------
+
   const totalAssets = useMemo(() => assets.reduce((s, a) => s + (Number(a.value || 0)), 0), [assets]);
   const totalLiabilities = useMemo(() => liabilities.reduce((s, l) => s + (Number(l.value || 0)), 0), [liabilities]);
   const netWorth = useMemo(() => totalAssets - totalLiabilities, [totalAssets, totalLiabilities]);
 
   const trend = useMemo(() => {
+    // If asset/liability histories are present build trend from them (existing behavior)
     const hasHist = assets.some(a => Array.isArray(a.history)) || liabilities.some(l => Array.isArray(l.history));
     if (hasHist) {
       const points = [];
@@ -217,9 +412,79 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
         const lSum = liabilities.reduce((s, l) => s + ((l.history && l.history[i]) ? Number(l.history[i]) : 0), 0);
         points.push(aSum - lSum);
       }
-      if (points.length) return points;
+      if (points.length) {
+        // if historical points exist but are very flat, add a small deterministic jitter so sparkline shows subtle motion
+        const flat = points.every(p => p === points[0]);
+        if (flat) {
+          const seed = Math.abs(Number(points[0]) || 1);
+          const seededRandom = (s, idx) => {
+            const x = Math.sin(s * 0.0001 + idx * 12.9898) * 43758.5453;
+            return x - Math.floor(x);
+          };
+          const jitterFactor = 0.035; // ±3.5%
+          const sinAmp = 0.02;
+          let jittered = points.map((p, i) => {
+            const r = seededRandom(seed, i);
+            const sinOffset = Math.sin(i * 1.7) * sinAmp;
+            const j = (r - 0.5) * 2 * jitterFactor;
+            return Math.round(p * (1 + j + sinOffset));
+          });
+
+          // light smoothing
+          if (jittered.length >= 3) {
+            const cpy = jittered.slice();
+            for (let i = 1; i < jittered.length - 1; i++) {
+              cpy[i] = Math.round(jittered[i - 1] * 0.25 + jittered[i] * 0.5 + jittered[i + 1] * 0.25);
+            }
+            jittered = cpy;
+          }
+          return jittered;
+        }
+        // otherwise points already have variation — lightly smooth to avoid jagged spikes
+        if (points.length >= 3) {
+          const copy = points.slice();
+          for (let i = 1; i < points.length - 1; i++) {
+            copy[i] = Math.round(points[i - 1] * 0.25 + points[i] * 0.5 + points[i + 1] * 0.25);
+          }
+          return copy;
+        }
+        return points;
+      }
     }
-    return Array.from({ length: 6 }, (_, i) => netWorth * (0.92 + i * 0.016));
+
+    // --- FALLBACK (previously linear). produce a nicer-looking trend with small ups/downs
+    const seed = Math.abs(Number(netWorth) || 1234567);
+    const basePoints = Array.from({ length: 6 }, (_, i) => {
+      // base linear progression used previously
+      return netWorth * (0.92 + i * 0.016);
+    });
+
+    const seededRandom = (s, idx) => {
+      const x = Math.sin(s * 0.00001234 + idx * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    };
+
+    const jitterFactor = 0.035; // ~3.5% max jitter
+    const sinAmp = 0.02; // ±2%
+
+    let points = basePoints.map((base, i) => {
+      const r = seededRandom(seed, i);
+      const sinOffset = Math.sin(i * 1.7) * sinAmp; // gentle wave
+      const j = (r - 0.5) * 2 * jitterFactor; // range ±jitterFactor
+      const val = base * (1 + j + sinOffset);
+      return Math.round(val);
+    });
+
+    // light smoothing to avoid too sharp spikes: weighted moving average (keeps deviations but softens)
+    if (points.length >= 3) {
+      const copy = points.slice();
+      for (let i = 1; i < points.length - 1; i++) {
+        copy[i] = Math.round(points[i - 1] * 0.25 + points[i] * 0.5 + points[i + 1] * 0.25);
+      }
+      points = copy;
+    }
+
+    return points;
   }, [assets, liabilities, netWorth]);
 
   // Save function now takes kind explicitly to avoid relying on 'adding' closure
@@ -533,7 +798,7 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
                       </div>
                       <div>
                         <div style={{ fontWeight: 700, color: COLORS.assetsCardText }}>{a.name}</div>
-                        <div style={{ fontSize: 12, color: COLORS.muted }}><Clock size={12} /> {new Date(a.updatedAt || a.createdAt || Date.now()).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 12, color: COLORS.muted }}><Clock size={12} /> {new Date(a.updatedAt || a.createdAt || Date.now()).toLocaleDateString('en-GB')}</div>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -559,7 +824,7 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
                       <div style={{ width: 40, height: 40, borderRadius: 8, background: getItemMeta(l.name).color, display: "grid", placeItems: "center" }}>{renderIcon(getItemMeta(l.name).Icon, 16, "#fff")}</div>
                       <div>
                         <div style={{ fontWeight: 700, color: COLORS.liabilitiesCardText }}>{l.name}</div>
-                        <div style={{ fontSize: 12, color: COLORS.muted }}>{new Date(l.updatedAt || l.createdAt || Date.now()).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 12, color: COLORS.muted }}>{new Date(l.updatedAt || l.createdAt || Date.now()).toLocaleDateString('en-GB')}</div>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -612,7 +877,7 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
               </div>
               <div style={{ width: 140, textAlign: "right" }}>
                 <div style={{ fontSize: 13, color: COLORS.muted }}>Last sync</div>
-                <div style={{ fontWeight: 800, color: COLORS.mainCardText }}>{new Date(Math.max(...assets.map(a => a.updatedAt || 0), ...liabilities.map(l => l.updatedAt || 0), Date.now())).toLocaleString()}</div>
+                <div style={{ fontWeight: 800, color: COLORS.mainCardText }}>{new Date(Math.max(...assets.map(a => a.updatedAt || 0), ...liabilities.map(l => l.updatedAt || 0), Date.now())).toLocaleString('en-GB')}</div>
               </div>
             </div>
 
@@ -685,7 +950,7 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
                     <div style={{ width: 40, height: 40, borderRadius: 8, background: getItemMeta(a.name).color, display: "grid", placeItems: "center" }}>{renderIcon(getItemMeta(a.name).Icon, 16, "#fff")}</div>
                     <div>
                       <div style={{ fontWeight: 700, color: COLORS.assetsCardText }}>{a.name}</div>
-                      <div style={{ fontSize: 12, color: COLORS.muted }}>{new Date(a.updatedAt || a.createdAt || Date.now()).toLocaleDateString()}</div>
+                      <div style={{ fontSize: 12, color: COLORS.muted }}>{new Date(a.updatedAt || a.createdAt || Date.now()).toLocaleDateString('en-GB')}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -710,7 +975,7 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
                     <div style={{ width: 40, height: 40, borderRadius: 8, background: getItemMeta(l.name).color, display: "grid", placeItems: "center" }}>{renderIcon(getItemMeta(l.name).Icon, 16, "#fff")}</div>
                     <div>
                       <div style={{ fontWeight: 700, color: COLORS.liabilitiesCardText }}>{l.name}</div>
-                      <div style={{ fontSize: 12, color: COLORS.muted }}>{new Date(l.updatedAt || l.createdAt || Date.now()).toLocaleDateString()}</div>
+                      <div style={{ fontSize: 12, color: COLORS.muted }}>{new Date(l.updatedAt || l.createdAt || Date.now()).toLocaleDateString('en-GB')}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>

@@ -7,6 +7,7 @@ import {
   onValue,
   update,
   remove,
+  off,
 } from "firebase/database";
 
 import useForcedPeriod from "../hooks/useForcedPeriod"; // added to follow export-safe pattern
@@ -33,6 +34,23 @@ export default function Savings({ forcedMonth = null, forcedYear = null, printMo
 
   /* ======= NEW: extra vertical space to add when viewing a card ======= */
   const VIEW_EXTRA_HEIGHT = 120; // px
+
+  /* ================= CONFIRM MODAL STATE ================= */
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    showCancel: true,
+    confirmText: "OK",
+    cancelText: "Cancel",
+    onConfirm: null,
+  });
+
+  const openModal = ({ title = "", message = "", showCancel = true, confirmText = "OK", cancelText = "Cancel", onConfirm = null }) => {
+    setModal({ open: true, title, message, showCancel, confirmText, cancelText, onConfirm });
+  };
+
+  const closeModal = () => setModal((m) => ({ ...m, open: false }));
 
   /* ================= FETCH GOALS ================= */
   useEffect(() => {
@@ -139,17 +157,28 @@ export default function Savings({ forcedMonth = null, forcedYear = null, printMo
     }
   };
 
-  /* ================= DELETE GOAL ================= */
+  /* ================= DELETE GOAL (now uses modal like Categories) ================= */
   const handleDelete = async (id) => {
     if (!user || !db) return alert("You must be signed in to delete a goal");
-    if (!window.confirm("Delete this savings goal?")) return;
 
-    try {
-      await remove(ref(db, `users/${user.uid}/savings/${id}`));
-    } catch (e) {
-      console.error("delete goal err", e);
-      alert("Failed to delete goal. Check console.");
-    }
+    openModal({
+      title: "Delete savings goal",
+      message: "Are you sure you want to delete this savings goal? This action cannot be undone.",
+      showCancel: true,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await remove(ref(db, `users/${user.uid}/savings/${id}`));
+        } catch (e) {
+          console.error("delete goal err", e);
+          alert("Failed to delete goal. Check console.");
+        } finally {
+          // close modal after operation
+          closeModal();
+        }
+      },
+    });
   };
 
   /* ================= TIME STATUS ================= */
@@ -543,6 +572,81 @@ export default function Savings({ forcedMonth = null, forcedYear = null, printMo
           );
         })}
       </div>
+
+      {/* ======= MODAL (category-style confirmation modal) ======= */}
+      {modal.open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            onClick={closeModal}
+            style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }}
+          />
+
+          <div
+            style={{
+              background: "#ffffff",
+              padding: "20px",
+              borderRadius: "10px",
+              width: "420px",
+              boxShadow: "0 12px 40px rgba(2,6,23,0.2)",
+              position: "relative",
+              zIndex: 10000,
+            }}
+          >
+            <div style={{ fontWeight: 800, marginBottom: "8px", color: "#0f172a" }}>{modal.title}</div>
+            <div style={{ fontSize: "14px", color: "#334155", marginBottom: "18px" }}>{modal.message}</div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              {modal.showCancel && (
+                <button
+                  onClick={closeModal}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                    background: "white",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  {modal.cancelText}
+                </button>
+              )}
+
+              <button
+                onClick={async () => {
+                  if (typeof modal.onConfirm === "function") {
+                    await modal.onConfirm();
+                  } else {
+                    closeModal();
+                  }
+                }}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: modal.confirmText === "Delete" ? "#dc2626" : "#0f9960",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 800,
+                }}
+              >
+                {modal.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

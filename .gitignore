@@ -1,64 +1,82 @@
+# -----------------------
 # Logs
+# -----------------------
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 firebase-debug.log*
 firebase-debug.*.log*
 
-# Firebase local files
+# -----------------------
+# Node / build / output
+# -----------------------
+node_modules/
+dist/
+dist-ssr/
+build/
+lib-cov/
+coverage/
+.nyc_output
+
+# -----------------------
+# Env files (secrets)
+# -----------------------
+.env
+.env.*.local
+.env.local
+*.local
+frontend/.env
+frontend/.env.local
+.env.development.local
+.env.test.local
+
+# -----------------------
+# Firebase / Firebase local files
+# -----------------------
 .firebase/
 .firebaserc
-
-# Firebase service account (SECRET) — MUST be ignored
-backend/src/main/resources/firebase-service-account.json
+firebase.js
 frontend/src/main/resources/firebase.js
+backend/src/main/resources/firebase.js
+backend/src/main/resources/firebase-service-account.json
 
-frontend/node_modules
-# VS Code
+# -----------------------
+# Editor / OS / IDE
+# -----------------------
 .vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw? 
 
-# Runtime data
+# -----------------------
+# Misc caches / runtime
+# -----------------------
 pids
 *.pid
 *.seed
 *.pid.lock
-
-# Coverage & instrumentation
-lib-cov
-coverage
-.nyc_output
-
-# Build tools / caches
-.grunt
-bower_components
-.lock-wscript
-build/Release
-
-# Dependency directories
-node_modules/
-
-# npm / yarn caches
+.eslintcache
+.node_repl_history
 .npm
 .yarn-integrity
 
-# Optional caches / history
-.eslintcache
-.node_repl_history
-
-# Packages
+# -----------------------
+# Package artifacts
+# -----------------------
 *.tgz
-
-# Env files (secrets)
-frontend/.env
-
-# dataconnect generated files
 .dataconnect
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Git LFS note (if you use large files, configure LFS instead)
-# *.psd
+# -----------------------
+# Optional / other
+# -----------------------
+firebase-debug.*

@@ -1,4 +1,6 @@
+# -----------------------
 # Logs
+# -----------------------
 logs
 *.log
 npm-debug.log*
@@ -6,19 +8,75 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log*
+firebase-debug.*.log*
 
-node_modules
-dist
-dist-ssr
+# -----------------------
+# Node / build / output
+# -----------------------
+node_modules/
+dist/
+dist-ssr/
+build/
+lib-cov/
+coverage/
+.nyc_output
+
+# -----------------------
+# Env files (secrets)
+# -----------------------
+.env
+.env.*.local
+.env.local
 *.local
+frontend/.env
+frontend/.env.local
+.env.development.local
+.env.test.local
 
-# Editor directories and files
-.vscode/*
+# -----------------------
+# Firebase / Firebase local files
+# -----------------------
+.firebase/
+.firebaserc
+firebase.js
+frontend/src/main/resources/firebase.js
+backend/src/main/resources/firebase.js
+backend/src/main/resources/firebase-service-account.json
+
+# -----------------------
+# Editor / OS / IDE
+# -----------------------
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.sw? 
+
+# -----------------------
+# Misc caches / runtime
+# -----------------------
+pids
+*.pid
+*.seed
+*.pid.lock
+.eslintcache
+.node_repl_history
+.npm
+.yarn-integrity
+
+# -----------------------
+# Package artifacts
+# -----------------------
+*.tgz
+.dataconnect
+
+# -----------------------
+# Optional / other
+# -----------------------
+firebase-debug.*

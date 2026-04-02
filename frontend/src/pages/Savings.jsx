@@ -294,7 +294,7 @@ export default function Savings({ forcedMonth = null, forcedYear = null, printMo
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1.5fr 1fr 1fr auto",
+            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
             gap: "10px",
             marginBottom: "22px",
           }}

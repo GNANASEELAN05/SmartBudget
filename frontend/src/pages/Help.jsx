@@ -20,6 +20,19 @@ const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
+
+function useWindowWidth() {
+  const [width, setWidth] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth : 800
+  );
+  React.useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
+
 const SAMPLE_FAQS = [
   {
     id: "faq-1",
@@ -49,13 +62,14 @@ const SAMPLE_FAQS = [
 
 const styles = {
   page: {
-    padding: 28,
+    padding: "20px 12px",
     minHeight: "100vh",
     background: "linear-gradient(135deg,#eef2ff,#ecfeff)",
     fontFamily:
       "Inter, system-ui, -apple-system, Roboto, Segoe UI, Helvetica Neue, Arial, sans-serif",
     color: "#0f172a",
     boxSizing: "border-box",
+    overflowX: "hidden",
   },
   container: {
     maxWidth: 1120,
@@ -63,6 +77,7 @@ const styles = {
   },
   headerRow: {
     display: "flex",
+    flexWrap: "wrap",
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 16,
@@ -107,6 +122,7 @@ const styles = {
   },
   searchArea: {
     display: "flex",
+    flexWrap: "wrap",
     gap: 12,
     alignItems: "center",
     marginBottom: 18,
@@ -142,6 +158,7 @@ const styles = {
   },
   actions: {
     display: "flex",
+    flexWrap: "wrap",
     gap: 8,
     alignItems: "center",
   },
@@ -391,6 +408,8 @@ const db = (() => {
 })();
 
 export default function Help() {
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 640;
   const [user, setUser] = useState(null);
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("faqs");
@@ -1355,7 +1374,10 @@ export default function Help() {
             </div>
           </div>
 
-          <div style={styles.quickGrid}>
+          <div style={{
+            ...styles.quickGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+          }}>
             <div style={styles.quickCard}>
               <div style={styles.smallText}>Quick action</div>
               <div
@@ -1415,7 +1437,12 @@ export default function Help() {
         </div>
 
         <div style={styles.card}>
-          <div style={styles.tabsRow}>
+          <div style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+            marginBottom: 14,
+          }}>
             <button
               onClick={() => setActiveTab("faqs")}
               style={{
@@ -1450,7 +1477,10 @@ export default function Help() {
             </button>
           </div>
 
-          <div style={styles.contentGrid}>
+          <div style={{
+            ...styles.contentGrid,
+            gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
+          }}>
             {/* LEFT COLUMN */}
             <div>
               {activeTab === "faqs" && (

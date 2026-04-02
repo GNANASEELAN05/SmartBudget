@@ -329,22 +329,24 @@ export default function ExpenseList({
   };
 
   /* ================= JSX ================= */
-  return (
+return (
     <div style={card}>
       {/* HEADER + FILTER */}
       <div
         style={{
           display: "flex",
+          flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: "12px",
           marginBottom: "16px",
         }}
       >
-        <h3 style={{ color: "#065f46" }}>Expenses</h3>
+        <h3 style={{ color: "#065f46", margin: 0 }}>Expenses</h3>
 
         {/* HIDE all filter controls in export/print mode */}
         {!printMode && (
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
             <select
               style={input}
               value={filterType}
@@ -435,7 +437,8 @@ export default function ExpenseList({
       </div>
 
       {/* TABLE */}
-      <table width="100%" style={{ borderCollapse: "collapse" }}>
+      <div style={{ overflowX: "auto" }}>
+      <table width="100%" style={{ borderCollapse: "collapse", minWidth: 560 }}>
         <thead>
           <tr style={{ background: "#bbf7d0" }}>
             <th style={tableHeader}>S.No</th>
@@ -506,6 +509,8 @@ export default function ExpenseList({
         </tbody>
       </table>
 
+</div>
+
       {/* ======= MODAL ======= */}
       {modal.open && (
         <div
@@ -518,6 +523,7 @@ export default function ExpenseList({
             alignItems: "center",
             justifyContent: "center",
             zIndex: 9999,
+            padding: "16px",
           }}
         >
           <div
@@ -530,7 +536,8 @@ export default function ExpenseList({
               background: "#ffffff",
               padding: "20px",
               borderRadius: "10px",
-              width: "420px",
+              width: "100%",
+              maxWidth: "420px",
               boxShadow: "0 12px 40px rgba(2,6,23,0.2)",
               position: "relative",
               zIndex: 10000,

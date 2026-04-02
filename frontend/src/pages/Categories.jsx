@@ -234,7 +234,7 @@ export default function Categories({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr auto",
+          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
           gap: "10px",
           marginBottom: "22px",
           alignItems: "center",

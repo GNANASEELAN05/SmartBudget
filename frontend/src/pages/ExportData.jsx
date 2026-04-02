@@ -541,17 +541,30 @@ export default function ExportExactPage() {
   }
 
   const pageWrapperStyle = {
-    width: "210mm",
-    minHeight: "297mm",
-    padding: "16mm",
+    width: "100%",
+    maxWidth: "100%",
+    minHeight: "auto",
+    padding: "12px",
     boxSizing: "border-box",
     background: "#fff",
     margin: "0 auto",
     color: "#0f172a",
-    overflow: "visible",
-    // reduce font-size to make export more compact so pages fit better:
-    fontSize: 12,
-    lineHeight: 1.25,
+    overflow: "hidden",
+    fontSize: 14,
+    lineHeight: 1.4,
+  };
+
+  const exportPageTitleStyle = {
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#0b63ff",
+    background: "#eff6ff",
+    border: "1px solid #bfdbfe",
+    borderRadius: 6,
+    padding: "5px 10px",
+    marginBottom: 10,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
   };
 
   // Improved export CSS:
@@ -580,7 +593,10 @@ export default function ExportExactPage() {
       break-inside: avoid;
     }
 
-    /* keep content constrained to the A4 panel during export */
+    /* keep content constrained to the panel during export */
+    .export-page {
+      overflow: hidden !important;
+    }
     .export-page * {
       max-width: 100% !important;
       box-sizing: border-box !important;
@@ -589,7 +605,7 @@ export default function ExportExactPage() {
     }
 
     /* neutralize positions and transforms which cause overflow outside the export panel */
-    .export-print * {
+    .export-print *:not(.networth-hidden-host):not(.networth-hidden-host *) {
       position: static !important;
       left: auto !important;
       right: auto !important;
@@ -612,38 +628,55 @@ export default function ExportExactPage() {
     .export-page .net-worth, .export-page .networth, .export-page .card, .export-page .panel {
       font-size: 13px !important;
     }
+
+    @media (max-width: 768px) {
+      .export-page [style*="grid-template-columns"],
+      .export-page [style*="display: grid"],
+      .export-page [style*="display:grid"] {
+        grid-template-columns: 1fr !important;
+      }
+      .export-page [style*="display: flex"],
+      .export-page [style*="display:flex"] {
+        flex-wrap: wrap !important;
+      }
+      .export-page [style*="width: 210mm"],
+      .export-page [style*="min-width"] {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+    }
   `;
 
   return (
-    <div style={{ padding: 22 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+    <div style={{ padding: "12px 10px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 14 }}>
         <div>
           <h2 style={{ margin: 0 }}>Export — Exact Pages (PDF)</h2>
           <div style={{ opacity: 0.75 }}>Each page will be rendered one-by-one in A4 format. Use "Load Data" then "Export PDF".</div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <select value={mode} onChange={e => setMode(e.target.value)} style={{ padding: 8, borderRadius: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <select value={mode} onChange={e => setMode(e.target.value)} style={{ padding: 8, borderRadius: 8, flex: "1 1 90px", minWidth: 80 }}>
             <option value="month">Month</option>
             <option value="year">Year</option>
           </select>
 
           {mode === "month" ? (
             <>
-              <select value={selMonth} onChange={e => setSelMonth(Number(e.target.value))} style={{ padding: 8, borderRadius: 8 }}>
+              <select value={selMonth} onChange={e => setSelMonth(Number(e.target.value))} style={{ padding: 8, borderRadius: 8, flex: "1 1 110px", minWidth: 100 }}>
                 {MONTHS_FULL.map((m,i) => <option key={i} value={i}>{m}</option>)}
               </select>
-              <input type="number" value={selYear} onChange={e => setSelYear(Number(e.target.value))} style={{ width: 100, padding: 8, borderRadius: 8 }} />
+              <input type="number" value={selYear} onChange={e => setSelYear(Number(e.target.value))} style={{ width: 90, padding: 8, borderRadius: 8, flex: "1 1 80px", minWidth: 75 }} />
             </>
           ) : (
-            <input type="number" value={selYear} onChange={e => setSelYear(Number(e.target.value))} style={{ width: 120, padding: 8, borderRadius: 8 }} />
+            <input type="number" value={selYear} onChange={e => setSelYear(Number(e.target.value))} style={{ width: 100, padding: 8, borderRadius: 8, flex: "1 1 80px", minWidth: 75 }} />
           )}
 
-          <button onClick={() => loadAllData({ autoExport: false })} style={{ background: "#0f9960", color: "#fff", padding: "8px 12px", borderRadius: 8 }}>
+          <button onClick={() => loadAllData({ autoExport: false })} style={{ background: "#0f9960", color: "#fff", padding: "8px 12px", borderRadius: 8, flex: "1 1 100px", whiteSpace: "nowrap" }}>
             {loading ? "Loading..." : "Load Data"}
           </button>
 
-          <button onClick={handleExportClick} style={{ background: "#0b63ff", color: "#fff", padding: "8px 12px", borderRadius: 8 }}>
+          <button onClick={handleExportClick} style={{ background: "#0b63ff", color: "#fff", padding: "8px 12px", borderRadius: 8, flex: "1 1 100px", whiteSpace: "nowrap" }}>
             Export PDF
           </button>
         </div>
@@ -769,13 +802,13 @@ export default function ExportExactPage() {
       <div
         ref={exportRef}
         className="export-print"
-        style={{ background: "#f8fafc", padding: "8px" }}
+        style={{ background: "#f8fafc", padding: "8px", width: "100%", maxWidth: "100%", overflowX: "hidden" }}
       >
         <style>{exportCss}</style>
 
         {/* Header card (small) */}
-        <div style={{ padding: 14, background: "#0b63ff", color: "#fff", borderRadius: 8, marginBottom: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ padding: 14, background: "#0b63ff", color: "#fff", borderRadius: 8, marginBottom: 12, overflowX: "hidden" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
             <div>
               <div style={{ fontWeight: 900, fontSize: 18 }}>Smart Budget Tracker — Export</div>
               <div style={{ opacity: 0.9 }}>{mode === "month" ? `${MONTHS_FULL[selMonth]} ${selYear}` : selYear}</div>
@@ -789,34 +822,42 @@ export default function ExportExactPage() {
 
         {/* ===== Render pages sequentially: each wrapped in a white A4-style panel ===== */}
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>1. Dashboard</div>
           <Dashboard forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>2. Budgets Overview</div>
           <BudgetsOverview forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>3. Transactions</div>
           <Transactions forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>4. Reports</div>
           <Reports forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>5. Analytics</div>
           <Analytics forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>6. Categories</div>
           <Categories forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>7. Trends</div>
           <Trends forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>8. Recurring</div>
           <Recurring forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
@@ -824,7 +865,8 @@ export default function ExportExactPage() {
         {/* Hidden host: render NetWorth off-screen so we can read its DOM and split into cards */}
         <div
           ref={networthHostRef}
-          style={{ position: "absolute", left: -20000, top: 0, width: "210mm", visibility: "hidden", pointerEvents: "none" }}
+          className="networth-hidden-host"
+          style={{ position: "fixed", left: -20000, top: 0, width: "210mm", visibility: "hidden", pointerEvents: "none", zIndex: -1 }}
         >
           <NetWorth forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
@@ -833,24 +875,31 @@ export default function ExportExactPage() {
             Otherwise fall back to rendering NetWorth as a single page (visible). */}
         {networthCardHtml.length > 0 ? (
           networthCardHtml.map((html, idx) => (
-            <div key={`networth-card-${idx}`} className="export-page" style={pageWrapperStyle} dangerouslySetInnerHTML={{ __html: html }} />
+            <div key={`networth-card-${idx}`} className="export-page" style={pageWrapperStyle}>
+              <div style={exportPageTitleStyle}>9. Net Worth {networthCardHtml.length > 1 ? `(${idx + 1}/${networthCardHtml.length})` : ""}</div>
+              <div dangerouslySetInnerHTML={{ __html: html }} />
+            </div>
           ))
         ) : (
           <div className="export-page" style={pageWrapperStyle}>
+            <div style={exportPageTitleStyle}>9. Net Worth</div>
             <NetWorth forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
           </div>
         )}
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>10. Savings</div>
           <Savings forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>11. Scheduled Bills</div>
           <ScheduledBills forcedMonth={selMonth} forcedYear={selYear} printMode={true} />
         </div>
 
-        {/* Final budgets page - NOTE: hide this entire "notes" area in export by adding hide-on-print class */}
+        {/* Final budgets page */}
         <div className="export-page" style={pageWrapperStyle}>
+          <div style={exportPageTitleStyle}>12. Monthly Budgets & History</div>
           <div style={{ fontWeight: 900, fontSize: 18, marginBottom: 8 }}>Monthly Budgets & History</div>
           {selectedMonthlyBudgets.map(({ monthKey, data }) => {
             const [y, mStr] = monthKey.split("-");

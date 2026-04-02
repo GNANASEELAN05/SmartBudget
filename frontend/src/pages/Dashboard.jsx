@@ -420,7 +420,8 @@ export default function DashboardFixed({
         </div>
 
         {/* main: left chart / right categories */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}
+          className="dashboard-main-grid">
           <div style={{ ...box }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.indigoA }}>Spends overview</div>
@@ -573,6 +574,13 @@ export default function DashboardFixed({
         </div>
 
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .dashboard-main-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -96,14 +96,14 @@ export default function Trends({ forcedMonth = null, forcedYear = null, printMod
   return (
     <div
       style={{
-        padding: 28,
+        padding: "16px",
         borderRadius: 22,
         background: "linear-gradient(135deg,#eef2ff,#ecfeff)",
         boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
       }}
     >
       {/* HEADER */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
         <div>
           <h2 style={{ fontWeight: 900, fontSize: 26, color: "#3730a3", margin: 0 }}>
             <TrendingUp size={20} style={{ marginRight: 8 }} />

@@ -257,15 +257,15 @@ export default function Reports({ forcedMonth = null, forcedYear = null, printMo
 
       {/* CONTROLS - hide interactive controls in printMode */}
       {!printMode && (
-        <div style={{ display: "flex", gap: 12, marginBottom: 22 }}>
-          <select style={input} value={filterType} onChange={e => setFilterType(e.target.value)}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22, alignItems: "center" }}>
+          <select style={{ ...input, height: 36, fontSize: 13, flex: "0 0 auto" }} value={filterType} onChange={e => setFilterType(e.target.value)}>
             <option value="month">Month</option>
             <option value="year">Year</option>
           </select>
 
           {filterType === "month" && (
             <select
-              style={input}
+              style={{ ...input, height: 36, fontSize: 13, flex: "0 0 auto" }}
               value={month}
               onChange={e => setMonth(Number(e.target.value))}
             >
@@ -277,16 +277,17 @@ export default function Reports({ forcedMonth = null, forcedYear = null, printMo
 
           <input
             type="number"
-            style={input}
+            style={{ ...input, height: 18, fontSize: 13, width: 80, flex: "0 0 auto" }}
             value={year}
             onChange={e => setYear(Number(e.target.value))}
           />
 
           <div
             onClick={handlePrint}
-              style={{
+            style={{
               marginLeft: "auto",
-              padding: "6px 14px",
+              padding: "6px 12px",
+              height: 36,
               textAlign: "center",
               background: "#e0f2fe",
               color: "#075985",
@@ -297,9 +298,11 @@ export default function Reports({ forcedMonth = null, forcedYear = null, printMo
               display: "flex",
               alignItems: "center",
               gap: "6px",
+              fontSize: 13,
+              whiteSpace: "nowrap",
+              flex: "0 0 auto",
             }}
           >
-            {/* using an icon instead of emoji */}
             {renderIcon(FileText, 16)}
             Print / Download PDF
           </div>
@@ -365,9 +368,9 @@ export default function Reports({ forcedMonth = null, forcedYear = null, printMo
             Expense Distribution
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 24 }}>
             {/* LEFT CATEGORY (BIGGER) -> ALWAYS SHOW ALL CATEGORIES */}
-            <div>
+            <div style={{ flex: "0 0 auto" }}>
               <div style={{ fontWeight: 900, marginBottom: 14, fontSize: 16 }}>
                 Overall Category
               </div>
@@ -397,36 +400,37 @@ export default function Reports({ forcedMonth = null, forcedYear = null, printMo
             </div>
 
             {/* DONUT */}
-            <svg viewBox="0 0 36 36" width="220">
-              {(() => {
-                // reset cumulative before rendering circles so offsets are correct
-                cumulative = 0;
-                return pieData.map(([cat, val]) => {
-                  const percent = totalExpense ? val / totalExpense : 0;
-                  const adjusted = Math.max(percent - gap, 0);
-                  const dash = `${adjusted * 100} ${100 - adjusted * 100}`;
-                  const offset = cumulative * 100;
-                  cumulative += percent;
+            <div style={{ flex: "0 0 auto", display: "flex", justifyContent: "center" }}>
+              <svg viewBox="0 0 36 36" width="160" height="160">
+                {(() => {
+                  cumulative = 0;
+                  return pieData.map(([cat, val]) => {
+                    const percent = totalExpense ? val / totalExpense : 0;
+                    const adjusted = Math.max(percent - gap, 0);
+                    const dash = `${adjusted * 100} ${100 - adjusted * 100}`;
+                    const offset = cumulative * 100;
+                    cumulative += percent;
 
-                  return (
-                    <circle
-                      key={cat}
-                      cx="18"
-                      cy="18"
-                      r="15"
-                      fill="none"
-                      strokeWidth="5"
-                      strokeDasharray={dash}
-                      strokeDashoffset={-offset}
-                      stroke={CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other}
-                    />
-                  );
-                });
-              })()}
-            </svg>
+                    return (
+                      <circle
+                        key={cat}
+                        cx="18"
+                        cy="18"
+                        r="15"
+                        fill="none"
+                        strokeWidth="5"
+                        strokeDasharray={dash}
+                        strokeDashoffset={-offset}
+                        stroke={CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other}
+                      />
+                    );
+                  });
+                })()}
+              </svg>
+            </div>
 
-            {/* RIGHT DETAILS (DEFAULT COLOR, SMALLER, SPACED) -> USED ONLY */}
-            <div style={{ minWidth: 180 }}>
+            {/* RIGHT DETAILS -> USED ONLY */}
+            <div style={{ flex: "1 1 160px", minWidth: 140 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, marginBottom: 8 }}>
                 <span style={{ color: "#2563eb" }}>CATEGORY</span>
                 <span style={{ color: "#16a34a" }}>TOTAL</span>

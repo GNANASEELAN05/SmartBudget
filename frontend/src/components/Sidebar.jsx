@@ -25,12 +25,23 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) setMobileOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const sections = [
     {
@@ -89,55 +100,122 @@ export default function Sidebar() {
     }
   };
 
-  return (
-    <div
-      style={{
-        width: collapsed ? "88px" : "260px",
-        height: "100vh",
-        background:
-          "linear-gradient(180deg, #0f9960 0%, #0b6e45 100%)",
-        color: "white",
-        padding: "18px 14px",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        transition: "width 0.25s ease",
-      }}
-    >
-      {/* Header */}
-      <div style={{ marginBottom: "22px", flexShrink: 0 }}>
-        <div
+return (
+    <>
+      {/* ===== MOBILE HAMBURGER BUTTON ===== */}
+        {isMobile && !mobileOpen && (
+        <button
+          onClick={() => setMobileOpen(true)}
           style={{
+            position: "fixed",
+            top: 18,
+            left: 14,
+            zIndex: 1300,
+            background: "#0f9960",
+            color: "white",
+            border: "none",
+            borderRadius: "10px",
+            width: "40px",
+            height: "40px",
             display: "flex",
             alignItems: "center",
-            justifyContent: collapsed ? "center" : "space-between",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
           }}
+          aria-label="Open menu"
         >
-          {!collapsed && (
-            <div>
-              <h2 style={{ fontWeight: 700, margin: 0 }}>Smart Budget</h2>
-              <span style={{ fontSize: "12px", opacity: 0.7 }}>
-                Personal Finance
-              </span>
-            </div>
-          )}
+          <span style={{ fontSize: 20, lineHeight: 1 }}>☰</span>
+        </button>
+      )}
 
+      {/* ===== MOBILE BACKDROP ===== */}
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 1200,
+          }}
+        />
+      )}
+
+      {/* ===== SIDEBAR ===== */}
+      <div
+        style={{
+          width: isMobile ? "260px" : collapsed ? "88px" : "260px",
+          height: "100vh",
+          background: "linear-gradient(180deg, #0f9960 0%, #0b6e45 100%)",
+          color: "white",
+          padding: "18px 14px",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          transition: isMobile ? "transform 0.28s ease" : "width 0.25s ease",
+          flexShrink: 0,
+          // Mobile: fixed drawer sliding in from left
+          ...(isMobile && {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            zIndex: 1250,
+            transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
+            boxShadow: mobileOpen ? "6px 0 24px rgba(0,0,0,0.35)" : "none",
+          }),
+        }}
+      >
+        {/* Header */}
+        <div style={{ marginBottom: "22px", flexShrink: 0 }}>
           <div
-            onClick={() => setCollapsed(!collapsed)}
             style={{
-              cursor: "pointer",
-              padding: "6px",
-              borderRadius: "8px",
-              background: "rgba(255,255,255,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: (!isMobile && collapsed) ? "center" : "space-between",
             }}
           >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            {(isMobile || !collapsed) && (
+              <div>
+                <h2 style={{ fontWeight: 700, margin: 0 }}>Smart Budget</h2>
+                <span style={{ fontSize: "12px", opacity: 0.7 }}>
+                  Personal Finance
+                </span>
+              </div>
+            )}
+
+            {isMobile ? (
+              // Mobile: show X close button
+              <div
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  cursor: "pointer",
+                  padding: "6px",
+                  borderRadius: "8px",
+                  background: "rgba(255,255,255,0.15)",
+                }}
+              >
+                <ChevronLeft size={18} />
+              </div>
+            ) : (
+              // Desktop: collapse/expand toggle
+              <div
+                onClick={() => setCollapsed(!collapsed)}
+                style={{
+                  cursor: "pointer",
+                  padding: "6px",
+                  borderRadius: "8px",
+                  background: "rgba(255,255,255,0.15)",
+                }}
+              >
+                {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
       {/* User Card */}
-      {!collapsed && (
+      {(isMobile || !collapsed) && (
         <div
           style={{
             background: "rgba(255,255,255,0.12)",
@@ -188,7 +266,7 @@ export default function Sidebar() {
       >
         {sections.map((section, si) => (
           <div key={si} style={{ marginBottom: "18px" }}>
-            {!collapsed && (
+            {(isMobile || !collapsed) && (
               <div
                 style={{
                   fontSize: "11px",
@@ -208,14 +286,14 @@ export default function Sidebar() {
               const isActive = location.pathname === item.path;
 
               return (
-                <div
-                  key={i}
-                  title={collapsed ? item.name : ""}
-                  onClick={() => handleClick(item)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: collapsed ? "center" : "flex-start",
+        <div
+          key={i}
+          title={(!isMobile && collapsed) ? item.name : ""}
+          onClick={() => { handleClick(item); if (isMobile) setMobileOpen(false); }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: (!isMobile && collapsed) ? "center" : "flex-start",
                     gap: "12px",
                     padding: "12px 14px",
                     marginBottom: "6px",
@@ -240,7 +318,7 @@ export default function Sidebar() {
                   }
                 >
                   <Icon size={20} />
-                  {!collapsed && (
+                  {(isMobile || !collapsed) && (
                     <span style={{ fontSize: "15px", fontWeight: 500 }}>
                       {item.name}
                     </span>
@@ -268,7 +346,7 @@ export default function Sidebar() {
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: collapsed ? "center" : "flex-start",
+          justifyContent: (!isMobile && collapsed) ? "center" : "flex-start",
           gap: "12px",
           padding: "12px 14px",
           borderRadius: "14px",
@@ -279,7 +357,7 @@ export default function Sidebar() {
         }}
       >
         <LogOut size={20} />
-        {!collapsed && (
+        {(isMobile || !collapsed) && (
           <span style={{ fontSize: "15px", fontWeight: 600 }}>
             Logout
           </span>
@@ -287,7 +365,7 @@ export default function Sidebar() {
       </div>
 
       {/* Footer */}
-      {!collapsed && (
+      {(isMobile || !collapsed) && (
         <div
           style={{
             fontSize: "11px",
@@ -309,6 +387,7 @@ export default function Sidebar() {
           }
         `}
       </style>
-    </div>
+      </div>
+    </>
   );
 }

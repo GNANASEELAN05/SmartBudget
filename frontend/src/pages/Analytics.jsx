@@ -130,7 +130,7 @@ export default function Analytics({
   /* ================= STYLES (UNCHANGED) ================= */
   const page = {
     background: "linear-gradient(135deg,#ecfdf5,#f0fdfa)",
-    padding: "26px",
+    padding: "16px",
     borderRadius: "18px",
     boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
   };

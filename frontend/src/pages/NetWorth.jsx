@@ -846,8 +846,8 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
 
   // when firebase present and available
   return (
-    <div style={{ padding: 28, fontFamily: "system-ui, -apple-system, Roboto, 'Segoe UI', 'Helvetica Neue', Arial", background: COLORS.pageBg, borderRadius: 18 }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <div style={{ padding: 28, fontFamily: "system-ui, -apple-system, Roboto, 'Segoe UI', 'Helvetica Neue', Arial", background: COLORS.pageBg, borderRadius: 18 }} className="nw-page-wrap">
+      <div style={{ maxWidth: 1200, margin: "0 auto", minWidth: 0, overflow: "hidden" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 26, color: COLORS.heading, display: "flex", alignItems: "center", gap: 10 }}>
@@ -867,7 +867,7 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 16 }} className="nw-main-grid">
           <div style={{ background: COLORS.mainCardBg, padding: 18, borderRadius: 12, border: `1px solid ${COLORS.cardBorder}`, boxShadow: "0 10px 30px rgba(16,24,40,0.04)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -937,7 +937,7 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
         </div>
 
         {/* lists */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }} className="nw-lists-grid">
           <div style={{ background: COLORS.assetsCardBg, padding: 14, borderRadius: 12, border: `1px solid ${COLORS.cardBorder}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <div style={{ fontWeight: 800, color: COLORS.assetsCardText }}>Assets</div>
@@ -991,6 +991,19 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
 
       </div>
       {renderModal()}
+      <style>{`
+        @media (max-width: 768px) {
+          .nw-page-wrap {
+            padding: 12px !important;
+          }
+          .nw-main-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .nw-lists-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

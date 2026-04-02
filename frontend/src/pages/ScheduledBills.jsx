@@ -398,7 +398,7 @@ export default function ScheduledBills({ forcedMonth = null, forcedYear = null, 
     <div style={{ minHeight: "100vh", padding: 28, background: THEME.pageGradient, fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 18, flexWrap: "wrap" }}>
           <div>
             <h1 style={{ margin: 0, display: "flex", alignItems: "center", gap: 12, color: THEME.heading, fontSize: 28, fontWeight: 800 }}>
               <span style={{ width: 44, height: 44, display: "inline-grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#eef2ff,#eefbf1)" }}>
@@ -409,8 +409,8 @@ export default function ScheduledBills({ forcedMonth = null, forcedYear = null, 
             <div style={{ marginTop: 8, color: THEME.muted }}>Manage subscriptions, recurring payments and upcoming bills — premium view.</div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {/* hide filters/search/add when in printMode */}
               {!printMode && (
                 <>
@@ -446,7 +446,7 @@ export default function ScheduledBills({ forcedMonth = null, forcedYear = null, 
         </div>
 
         {/* KPI summary */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 18 }}>
           <div style={{ ...styles.kpiCard, borderLeft: `6px solid ${THEME.accent}` }}>
             <div style={{ color: THEME.muted, fontSize: 13, fontWeight: 700 }}>Active bills</div>
             <div style={{ marginTop: 8, fontSize: 20, fontWeight: 900, color: THEME.heading }}>{activeCount}</div>
@@ -666,12 +666,15 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 8,
-    padding: "10px 12px",
+    padding: "8px 12px",
     borderRadius: 12,
     background: "#fff",
     boxShadow: "0 8px 22px rgba(16,24,40,0.06)",
     border: "1px solid rgba(15,23,42,0.06)",
-    minWidth: 340
+    minWidth: 0,
+    width: "100%",
+    maxWidth: 340,
+    flex: "1 1 180px"
   },
   searchInput: {
     border: "none",
@@ -681,18 +684,20 @@ const styles = {
     color: "#0f172a"
   },
   select: {
-    padding: "10px 12px",
+    padding: "8px 10px",
     borderRadius: 10,
     border: "1px solid rgba(15,23,42,0.08)",
     background: "#fff",
     fontSize: 13,
-    color: "#0f172a"
+    color: "#0f172a",
+    height: 38,
+    flexShrink: 0
   },
   addBtn: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 8,
-    padding: "8px 12px",
+    gap: 6,
+    padding: "7px 12px",
     borderRadius: 10,
     border: "none",
     cursor: "pointer",
@@ -700,6 +705,8 @@ const styles = {
     color: "#fff",
     fontWeight: 800,
     fontSize: 13,
+    lineHeight: 1,
+    height: 38,
     boxShadow: "0 8px 20px rgba(67,56,202,0.16)"
   },
   kpiCard: {

@@ -281,7 +281,7 @@ export default function AddExpense() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1.4fr",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
           gap: "24px",
           marginTop: "12px",
         }}
@@ -359,7 +359,8 @@ export default function AddExpense() {
             Recent Expenses (Disappears After 24 Hours)
           </h3>
 
-          <table width="100%" style={{ borderCollapse: "collapse" }}>
+          <div style={{ overflowX: "auto" }}>
+          <table width="100%" style={{ borderCollapse: "collapse", minWidth: 500 }}>
             <thead>
               <tr style={{ background: "#bbf7d0" }}>
                 <th style={tableHeader}>S.No</th>
@@ -422,6 +423,7 @@ export default function AddExpense() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

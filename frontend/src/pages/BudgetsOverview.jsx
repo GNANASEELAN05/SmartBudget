@@ -238,7 +238,7 @@ export default function BudgetsOverview({
   return (
     <div
       style={{
-        padding: 28,
+        padding: "16px",
         borderRadius: 22,
         background: "linear-gradient(135deg,#f0fdfa,#ecfeff)",
         boxShadow: "0 18px 40px rgba(0,0,0,0.12)",

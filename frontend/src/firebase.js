@@ -3,12 +3,14 @@ import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCvRsqfydT2xeeQ5tn3OpgP5ooqYfzPojY",
+  authDomain: "smart-budget-tracker-23696.firebaseapp.com",
+  databaseURL: "https://smart-budget-tracker-23696-default-rtdb.firebaseio.com",
+  projectId: "smart-budget-tracker-23696",
+  storageBucket: "smart-budget-tracker-23696.firebasestorage.app",
+  messagingSenderId: "473248868290",
+  appId: "1:473248868290:web:0c7809bcc1845229b8985b",
+  measurementId: "G-V591H2L6K1"
 };
 
 const app = initializeApp(firebaseConfig);

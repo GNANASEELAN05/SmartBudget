@@ -39,7 +39,7 @@ frontend/.env.local
 # -----------------------
 .firebase/
 .firebaserc
-
+firebase.js
 frontend/src/main/resources/firebase.js
 backend/src/main/resources/firebase.js
 backend/src/main/resources/firebase-service-account.json

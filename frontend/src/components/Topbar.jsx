@@ -115,10 +115,10 @@ export default function Topbar() {
     return (
       <div
         style={{
-          position: "absolute",
-          top: 52,
-          right: 0,
-          width: 360,
+          position: "fixed",
+          top: 72,
+          right: 8,
+          width: "min(360px, calc(100vw - 16px))",
           maxHeight: 420,
           background: "#fff",
           borderRadius: 12,
@@ -291,7 +291,7 @@ export default function Topbar() {
     return () => document.removeEventListener("click", onDocClick);
   }, [mailOpen]);
 
-  return (
+return (
     <div
       style={{
         height: "72px",
@@ -300,11 +300,11 @@ export default function Topbar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 28px",
+        padding: "0 16px",
       }}
     >
-      {/* Left area: search removed (kept empty to avoid layout shift) */}
-      <div style={{ width: 320 }} />
+      {/* Left area */}
+      <div style={{ width: 40 }} />
 
       {/* Right: Icons + Profile */}
       <div style={{ display: "flex", alignItems: "center", gap: "22px", position: "relative" }}>
@@ -341,16 +341,20 @@ export default function Topbar() {
               color: "white",
               fontWeight: "600",
               fontSize: "14px",
+              flexShrink: 0,
             }}
           >
             {initial}
           </div>
 
-          <div style={{ lineHeight: 1.2 }}>
+          <div style={{ lineHeight: 1.2, display: "none" }} className="topbar-username">
             <div style={{ fontSize: "14px", fontWeight: 600 }}>{username}</div>
             <div style={{ fontSize: "12px", color: "#64748b" }}>Active</div>
           </div>
         </div>
+        <style>{`
+          @media (min-width: 480px) { .topbar-username { display: block !important; } }
+        `}</style>
 
         {/* view ticket modal (outside popup so it covers full screen) */}
         {renderViewTicketModal()}

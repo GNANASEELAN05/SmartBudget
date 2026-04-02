@@ -7,20 +7,22 @@ export default function DashboardLayout() {
     <div
       style={{
         display: "flex",
-        height: "100vh",          // fixed height
-        overflow: "hidden",       // ⛔ block page scroll here ONLY
+        height: "100vh",
+        overflow: "hidden",
       }}
     >
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Right Side */}
+      {/* Right Side — takes full width on mobile since sidebar is fixed/off-screen */}
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",     // ⛔ isolate content scroll
+          overflow: "hidden",
+          minWidth: 0,
+          width: "100%",
         }}
       >
         {/* Topbar (fixed) */}
@@ -32,13 +34,11 @@ export default function DashboardLayout() {
         <div
           style={{
             flex: 1,
-            overflowY: "auto",     // ✅ content scrolls here
-            minHeight: 0,          // 🔑 required for flex scroll
+            overflowY: "auto",
+            minHeight: 0,
             padding: "16px",
-
-            /* ✅ hide scrollbar but keep scrolling */
-            scrollbarWidth: "none",     // Firefox
-            msOverflowStyle: "none",    // IE / Edge
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
           }}
           className="hide-scrollbar"
         >
@@ -46,16 +46,25 @@ export default function DashboardLayout() {
         </div>
       </div>
 
-      {/* Webkit scrollbar hide */}
-      <style>
-        {`
-          .hide-scrollbar::-webkit-scrollbar {
-            width: 0;
-            height: 0;
-            display: none;
+      {/* Scrollbar hide styles */}
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .hide-scrollbar {
+            padding: 12px 8px !important;
+            padding-top: 56px !important;
           }
-        `}
-      </style>
+        }
+        @media (min-width: 769px) {
+          .hide-scrollbar {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

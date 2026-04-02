@@ -575,22 +575,22 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
     if (!show) return null;
 
     return (
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: 8 }}>
+      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", maxWidth: "100%" }} className="nw-add-form">
         <input
           placeholder={kind === "asset" ? "Asset name" : "Liability name"}
           value={localName}
           onChange={e => setLocalName(e.target.value)}
-          style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(15,23,42,0.08)", minWidth: 160 }}
+          style={{ padding: "7px 8px", borderRadius: 8, border: "1px solid rgba(15,23,42,0.08)", width: 120, minWidth: 0, fontSize: 13 }}
         />
         <input
           placeholder="Value"
           value={localValue}
           onChange={e => setLocalValue(e.target.value)}
-          style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(15,23,42,0.08)", width: 110 }}
+          style={{ padding: "7px 8px", borderRadius: 8, border: "1px solid rgba(15,23,42,0.08)", width: 80, minWidth: 0, fontSize: 13 }}
           inputMode="numeric"
         />
-        <button onClick={() => saveNewItem(kind, localName, localValue)} style={{ border: "none", padding: "8px 10px", borderRadius: 8, cursor: "pointer", background: COLORS.primary, color: "#fff", fontWeight: 700 }}>Save</button>
-        <button onClick={cancelAdding} style={{ border: "none", padding: "8px 10px", borderRadius: 8, cursor: "pointer", background: "transparent", color: COLORS.muted }}>Cancel</button>
+        <button onClick={() => saveNewItem(kind, localName, localValue)} style={{ border: "none", padding: "7px 10px", borderRadius: 8, cursor: "pointer", background: COLORS.primary, color: "#fff", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>Save</button>
+        <button onClick={cancelAdding} style={{ border: "none", padding: "7px 8px", borderRadius: 8, cursor: "pointer", background: "transparent", color: COLORS.muted, fontSize: 13, whiteSpace: "nowrap" }}>Cancel</button>
       </div>
     );
   };
@@ -848,14 +848,14 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
   return (
     <div style={{ padding: 28, fontFamily: "system-ui, -apple-system, Roboto, 'Segoe UI', 'Helvetica Neue', Arial", background: COLORS.pageBg, borderRadius: 18 }} className="nw-page-wrap">
       <div style={{ maxWidth: 1200, margin: "0 auto", minWidth: 0, overflow: "hidden" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 26, color: COLORS.heading, display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, gap: 8, flexWrap: "wrap" }} className="nw-header-row">
+          <div style={{ minWidth: 0, flexShrink: 1 }}>
+            <h1 style={{ margin: 0, fontSize: 26, color: COLORS.heading, display: "flex", alignItems: "center", gap: 10 }} className="nw-title">
               {renderIcon(Scale, 20, COLORS.primary)} <span>Net Worth</span>
             </h1>
-            <div style={{ color: COLORS.muted, marginTop: 6 }}>Assets vs liabilities — consolidated view</div>
+            <div style={{ color: COLORS.muted, marginTop: 6 }} className="nw-subtitle">Assets vs liabilities — consolidated view</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {/* hide interactive add controls in printMode */}
             {!printMode && !adding.kind && (
               <>
@@ -1009,6 +1009,24 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
           }
           .nw-stat-boxes {
             flex-wrap: wrap !important;
+          }
+          .nw-header-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+          .nw-title {
+            font-size: 20px !important;
+          }
+          .nw-subtitle {
+            font-size: 12px !important;
+          }
+          .nw-add-form {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+          .nw-add-form input {
+            flex: 1 1 80px !important;
+            width: auto !important;
           }
         }
         .nw-page-wrap * {

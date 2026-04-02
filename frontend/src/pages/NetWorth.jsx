@@ -867,17 +867,17 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 16 }} className="nw-main-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 16, minWidth: 0 }} className="nw-main-grid">
           <div style={{ background: COLORS.mainCardBg, padding: 18, borderRadius: 12, border: `1px solid ${COLORS.cardBorder}`, boxShadow: "0 10px 30px rgba(16,24,40,0.04)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13, color: COLORS.muted, fontWeight: 700 }}>Net worth</div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: COLORS.mainCardText }}>{moneyINR(netWorth)}</div>
-                <div style={{ color: COLORS.muted, marginTop: 6 }}>Assets {moneyINR(totalAssets)} · Liabilities {moneyINR(totalLiabilities)}</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: COLORS.mainCardText, wordBreak: "break-word" }}>{moneyINR(netWorth)}</div>
+                <div style={{ color: COLORS.muted, marginTop: 6, fontSize: 13, wordBreak: "break-word" }}>Assets {moneyINR(totalAssets)} · Liabilities {moneyINR(totalLiabilities)}</div>
               </div>
-              <div style={{ width: 140, textAlign: "right" }}>
+              <div style={{ textAlign: "right", flexShrink: 0 }} className="nw-lastsync">
                 <div style={{ fontSize: 13, color: COLORS.muted }}>Last sync</div>
-                <div style={{ fontWeight: 800, color: COLORS.mainCardText }}>{new Date(Math.max(...assets.map(a => a.updatedAt || 0), ...liabilities.map(l => l.updatedAt || 0), Date.now())).toLocaleString('en-GB')}</div>
+                <div style={{ fontWeight: 800, color: COLORS.mainCardText, fontSize: 12 }}>{new Date(Math.max(...assets.map(a => a.updatedAt || 0), ...liabilities.map(l => l.updatedAt || 0), Date.now())).toLocaleString('en-GB')}</div>
               </div>
             </div>
 
@@ -887,21 +887,22 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
               </svg>
             </div>
 
-            <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-              <div style={{ flex: 1, padding: 10, borderRadius: 10, background: COLORS.stat1Bg, border: `1px solid ${COLORS.cardBorder}` }}>
-                <div style={{ fontSize: 12, color: COLORS.muted }}>Total assets</div>
-                <div style={{ fontWeight: 800, color: COLORS.stat1Text }}>{moneyINR(totalAssets)}</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }} className="nw-stat-boxes">
+              <div style={{ flex: "1 1 80px", minWidth: 0, padding: 10, borderRadius: 10, background: COLORS.stat1Bg, border: `1px solid ${COLORS.cardBorder}` }}>
+                <div style={{ fontSize: 11, color: COLORS.muted }}>Total assets</div>
+                <div style={{ fontWeight: 800, color: COLORS.stat1Text, fontSize: 13, wordBreak: "break-word" }}>{moneyINR(totalAssets)}</div>
               </div>
 
-              <div style={{ flex: 1, padding: 10, borderRadius: 10, background: COLORS.stat2Bg, border: `1px solid ${COLORS.cardBorder}` }}>
-                <div style={{ fontSize: 12, color: COLORS.muted }}>Total liabilities</div>
-                <div style={{ fontWeight: 800, color: COLORS.stat2Text }}>{moneyINR(totalLiabilities)}</div>
+              <div style={{ flex: "1 1 80px", minWidth: 0, padding: 10, borderRadius: 10, background: COLORS.stat2Bg, border: `1px solid ${COLORS.cardBorder}` }}>
+                <div style={{ fontSize: 11, color: COLORS.muted }}>Total liabilities</div>
+                <div style={{ fontWeight: 800, color: COLORS.stat2Text, fontSize: 13, wordBreak: "break-word" }}>{moneyINR(totalLiabilities)}</div>
               </div>
 
-              <div style={{ flex: 1, padding: 10, borderRadius: 10, background: COLORS.stat3Bg, border: `1px solid ${COLORS.cardBorder}` }}>
-                <div style={{ fontSize: 12, color: COLORS.muted }}>Net worth</div>
-                <div style={{ fontWeight: 800, color: COLORS.stat3Text }}>{moneyINR(netWorth)}</div>
+              <div style={{ flex: "1 1 80px", minWidth: 0, padding: 10, borderRadius: 10, background: COLORS.stat3Bg, border: `1px solid ${COLORS.cardBorder}` }}>
+                <div style={{ fontSize: 11, color: COLORS.muted }}>Net worth</div>
+                <div style={{ fontWeight: 800, color: COLORS.stat3Text, fontSize: 13, wordBreak: "break-word" }}>{moneyINR(netWorth)}</div>
               </div>
+
             </div>
 
           </div>
@@ -914,15 +915,15 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
 
             <div>
               {assets.slice(0,6).map(a => (
-                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid rgba(15,23,42,0.03)" }}>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 10, background: getItemMeta(a.name).color, display: "grid", placeItems: "center" }}>{renderIcon(getItemMeta(a.name).Icon, 18, "#fff")}</div>
-                    <div>
-                      <div style={{ fontWeight: 700, color: COLORS.topHoldingsText }}>{a.name}</div>
+                <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid rgba(15,23,42,0.03)", gap: 8, minWidth: 0 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0, flex: 1 }}>
+                    <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 10, background: getItemMeta(a.name).color, display: "grid", placeItems: "center" }}>{renderIcon(getItemMeta(a.name).Icon, 18, "#fff")}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: COLORS.topHoldingsText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
                       <div style={{ fontSize: 12, color: COLORS.muted }}>{moneyINR(a.value)}</div>
                     </div>
                   </div>
-                  <div style={{ fontWeight: 800 }}>{moneyINR(a.value)}</div>
+                  <div style={{ fontWeight: 800, flexShrink: 0, fontSize: 13 }}>{moneyINR(a.value)}</div>
                 </div>
               ))}
 
@@ -995,6 +996,7 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
         @media (max-width: 768px) {
           .nw-page-wrap {
             padding: 12px !important;
+            overflow-x: hidden !important;
           }
           .nw-main-grid {
             grid-template-columns: 1fr !important;
@@ -1002,6 +1004,15 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
           .nw-lists-grid {
             grid-template-columns: 1fr !important;
           }
+          .nw-lastsync {
+            display: none !important;
+          }
+          .nw-stat-boxes {
+            flex-wrap: wrap !important;
+          }
+        }
+        .nw-page-wrap * {
+          box-sizing: border-box;
         }
       `}</style>
     </div>

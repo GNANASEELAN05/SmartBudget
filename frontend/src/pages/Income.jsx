@@ -408,15 +408,16 @@ export default function Income({
   return (
     <div
       style={{
-        padding: 28,
+        padding: "20px 12px",
         borderRadius: 22,
         background: "linear-gradient(135deg,#fff7ed,#f8fafc)",
         boxShadow: "0 20px 42px rgba(3,7,18,0.06)",
         color: "#0f172a",
+        overflowX: "hidden",
       }}
     >
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 12 }}>
         <div>
           <h2 style={{ fontWeight: 900, fontSize: 26, margin: 0, color: "#0b1220" }}>Manage Income</h2>
           <p style={{ opacity: 0.85, marginTop: 6, color: "#334155" }}>
@@ -426,7 +427,7 @@ export default function Income({
 
         {/* Month / Year selection (premium pill) */}
         {!printMode && (
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
@@ -454,8 +455,9 @@ export default function Income({
               onBlur={commitYearFromInput}
               onKeyDown={(e) => { if (e.key === "Enter") { commitYearFromInput(); e.currentTarget.blur(); } }}
               style={{
-                width: 120,
-                padding: "10px 14px",
+                width: 90,
+                minWidth: 70,
+                padding: "10px 10px",
                 borderRadius: 12,
                 fontWeight: 800,
                 border: "1px solid rgba(15,23,42,0.06)",
@@ -468,14 +470,14 @@ export default function Income({
       </div>
 
       {/* SUMMARY CARDS */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 18, marginBottom: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 12, marginBottom: 18 }}>
         <InfoCard label="Total Income (this month)" value={formatCurrency(totalIncome)} icon={Wallet} />
         <InfoCard label="Entries" value={incomes.length} icon={ListIcon} />
         <InfoCard label="Selected" value={`${MONTHS[month]} ${year}`} icon={Calendar} />
       </div>
 
       {/* ADD / EDIT FORM + CSV IMPORT */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 18, marginBottom: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18, marginBottom: 18 }}>
         <form onSubmit={handleAddOrUpdate} style={{ padding: 18, borderRadius: 14, background: "#ffffff", boxShadow: "0 10px 30px rgba(2,6,23,0.04)" }}>
           <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
             <input ref={nameRef} placeholder="Income name (e.g., Salary, Freelance)" style={inputStyle()} />

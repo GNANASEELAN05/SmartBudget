@@ -308,22 +308,22 @@ export default function DashboardFixed({
     <div style={{ padding: 28, fontFamily: "system-ui, -apple-system, Roboto, 'Segoe UI', 'Helvetica Neue', Arial", background: COLORS.pageBg, borderRadius: 22 }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-          <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ minWidth: 0, flex: "1 1 160px" }}>
             <h1 style={{ margin: 0, fontSize: 26, color: COLORS.indigoA }}>👋 Hi, <span style={{ color: "#0b5cff" }}>{profile.name || "User"}</span></h1>
             <div style={{ color: COLORS.indigoB, fontSize: 14, marginTop: 6 }}>
               Financial overview — <strong style={{ color: COLORS.indigoA }}>{MONTHS[month]} {year}</strong>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center", background: "#fff", padding: 8, borderRadius: 10, boxShadow: "0 6px 18px rgba(16,24,40,0.04)" }}>
               {!printMode && (
                 <>
                   <select
                     value={month}
                     onChange={e => setMonth(Number(e.target.value))}
-                    style={{ border: "none", background: "transparent", fontSize: 14, color: COLORS.indigoA }}
+                    style={{ border: "none", background: "transparent", fontSize: 14, color: COLORS.indigoA, maxWidth: 90 }}
                   >
                     {MONTHS.map((m,i) => <option key={i} value={i}>{m}</option>)}
                   </select>
@@ -331,14 +331,11 @@ export default function DashboardFixed({
                     value={year}
                     onChange={e => setYear(Number(e.target.value))}
                     type="number"
-                    style={{ width: 84, border: "none", background: "transparent", fontSize: 14, color: COLORS.indigoA }}
+                    style={{ width: 70, border: "none", background: "transparent", fontSize: 14, color: COLORS.indigoA }}
                   />
                 </>
               )}
             </div>
-
-            {/* SEARCH BAR REMOVED - kept layout size unaffected */}
-            <div style={{ width: 0 }} />
           </div>
         </div>
 

@@ -207,112 +207,28 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
   const ranGeminiRef = useRef(false);
 
   // helper to read possible env locations (supports Vite import.meta.env, process.env fallback and window global)
-  function getClientGeminiKey() {
-    try {
-      // Vite style
-      if (typeof import.meta !== "undefined" && import.meta.env) {
-        if (import.meta.env.VITE_GEMINI_API_KEY) return import.meta.env.VITE_GEMINI_API_KEY;
-        if (import.meta.env.GEMINI_API_KEY) return import.meta.env.GEMINI_API_KEY;
-      }
-    } catch (e) {}
-    // process.env (some bundlers)
-    try {
-      if (typeof process !== "undefined" && process.env) {
-        if (process.env.VITE_GEMINI_API_KEY) return process.env.VITE_GEMINI_API_KEY;
-        if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
-        if (process.env.REACT_APP_GEMINI_API_KEY) return process.env.REACT_APP_GEMINI_API_KEY;
-      }
-    } catch (e) {}
-    // window global fallback
-    try {
-      if (typeof window !== "undefined" && window.__GEMINI_API_KEY) return window.__GEMINI_API_KEY;
-    } catch (e) {}
-    return null;
-  }
+  const API_BASE = import.meta.env.VITE_API_BASE || "";
 
-  // browser-friendly Gemini call + robust parsing
-  async function callGeminiFromClient(prompt, apiKey) {
-    if (!apiKey) throw new Error("No Gemini key provided to client callGeminiFromClient");
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-    const body = {
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    };
-
-    const res = await fetch(url, {
+  async function callGeminiFromClient(prompt, idToken) {
+    const res = await fetch(`${API_BASE}/api/gemini/analyze`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
+        ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ prompt, data: {} }),
     });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`Gemini API error ${res.status}: ${txt}`);
-    }
-
+    if (!res.ok) throw new Error(`Backend Gemini error: ${res.status}`);
     const data = await res.json();
-
-    // robust text extraction (similar to server script)
-    const textCandidates = [];
-    try {
-      const candidates = data?.candidates || data?.output?.candidates;
-      if (Array.isArray(candidates) && candidates.length) {
-        for (const c of candidates) {
-          if (Array.isArray(c.content)) {
-            for (const part of c.content) {
-              if (Array.isArray(part.parts)) {
-                for (const p of part.parts) {
-                  if (typeof p.text === "string") textCandidates.push(p.text);
-                }
-              } else if (typeof part.text === "string") {
-                textCandidates.push(part.text);
-              }
-            }
-          } else if (c.content && c.content.parts) {
-            for (const p of c.content.parts) {
-              if (typeof p.text === "string") textCandidates.push(p.text);
-            }
-          }
-        }
-      }
-    } catch (e) {
-      // fallthrough
-    }
-
-    if (!textCandidates.length) textCandidates.push(JSON.stringify(data));
-
-    for (const text of textCandidates) {
-      try {
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {}
-
-      const m = text.match(/\[[\s\d,.\-]+\]/m);
-      if (m) {
-        try {
-          const parsed = JSON.parse(m[0]);
-          if (Array.isArray(parsed)) return parsed;
-        } catch (e) {}
-      }
-
-      const nums = text.match(/-?\d{2,}/g);
-      if (nums && nums.length >= 6) {
-        const last6 = nums.slice(-6).map((n) => Number(n));
-        return last6;
-      }
-    }
-
-    throw new Error("Could not parse Gemini response into an integer array. Raw candidates: " + JSON.stringify(textCandidates));
+    if (data.error) throw new Error(data.error);
+    // parse the result string into array
+    const text = data.result || "";
+    try { const p = JSON.parse(text); if (Array.isArray(p)) return p; } catch (e) {}
+    const m = text.match(/\[[\s\d,.\-]+\]/m);
+    if (m) { try { const p = JSON.parse(m[0]); if (Array.isArray(p)) return p; } catch (e) {} }
+    const nums = text.match(/-?\d{2,}/g);
+    if (nums && nums.length >= 6) return nums.slice(-6).map(Number);
+    throw new Error("Could not parse Gemini response: " + text);
   }
 
   useEffect(() => {
@@ -327,19 +243,13 @@ export default function NetWorth({ printMode = false, forcedMonth = null, forced
       return;
     }
 
-    const GEMINI_KEY = getClientGeminiKey();
-    if (!GEMINI_KEY) {
-      // nothing to do client-side
-      return;
-    }
-
-    // warn user (console) about client-side key exposure
-    console.warn("Using client-side Gemini key to generate trend. This exposes the key in browser. Prefer server-side script.");
+    if (!user) return;
 
     let cancelled = false;
 
     (async () => {
       try {
+        const idToken = await user.getIdToken();
         const totalA = assets.reduce((s, a) => s + (Number(a.value || 0)), 0);
         const totalL = liabilities.reduce((s, l) => s + (Number(l.value || 0)), 0);
         const netWorth = totalA - totalL;
@@ -350,7 +260,7 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
 - Introduce small ups and downs (no perfectly straight lines).
 - Return ONLY a valid JSON array (example: [123456,123000,124500,122900,125300,124800]) and nothing else.`;
 
-        const trend = await callGeminiFromClient(prompt, GEMINI_KEY);
+        const trend = await callGeminiFromClient(prompt, idToken);
 
         if (cancelled) return;
         if (!Array.isArray(trend) || trend.length === 0) {

@@ -7,24 +7,22 @@ import {
 } from "recharts";
 import { Sparkles, Download, RefreshCw, Calendar } from "lucide-react";
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 const COLORS = ["#6366f1","#22d3ee","#f59e0b","#10b981","#ef4444","#8b5cf6","#f43f5e","#0ea5e9"];
 
-async function callGemini(promptText) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
-      }),
-    }
-  );
+async function callGemini(promptText, idToken) {
+  const res = await fetch(`${API_BASE}/api/gemini/analyze`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    },
+    body: JSON.stringify({ prompt: promptText, data: {} }),
+  });
   if (!res.ok) throw new Error("Gemini API error: " + res.status);
   const data = await res.json();
-  return data.candidates[0].content.parts[0].text;
+  if (data.error) throw new Error(data.error);
+  return data.result;
 }
 
 const MONTHS = [
@@ -58,6 +56,7 @@ export default function OverallAnalysis() {
     setAnalysis(null);
 
     try {
+      const idToken = await user.getIdToken();
       const snap = await get(ref(db, `users/${user.uid}`));
       const userData = snap.exists() ? snap.val() : {};
 
@@ -177,7 +176,7 @@ Use real numbers only from the data. If no data for a month, skip it.
 User financial data:
 ${JSON.stringify(summaryPayload, null, 2)}`;
 
-      const rawText = await callGemini(prompt);
+      const rawText = await callGemini(prompt, idToken);
       const cleaned = rawText.replace(/```json|```/g, "").trim();
       const parsed  = JSON.parse(cleaned);
 

@@ -7,24 +7,22 @@ import {
 } from "recharts";
 import { Sparkles, RefreshCw } from "lucide-react";
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 const COLORS = ["#6366f1","#22d3ee","#f59e0b","#10b981","#ef4444","#8b5cf6","#f43f5e"];
 
-async function callGeminiDirect(promptText) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
-      }),
-    }
-  );
+async function callGeminiDirect(promptText, idToken) {
+  const res = await fetch(`${API_BASE}/api/gemini/analyze`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    },
+    body: JSON.stringify({ prompt: promptText, data: {} }),
+  });
   if (!res.ok) throw new Error("Gemini API error: " + res.status);
   const data = await res.json();
-  return data.candidates[0].content.parts[0].text;
+  if (data.error) throw new Error(data.error);
+  return data.result;
 }
 
 export default function GeminiInsightChart({ pageContext = "dashboard" }) {
@@ -45,6 +43,7 @@ export default function GeminiInsightChart({ pageContext = "dashboard" }) {
     setExplanation("");
 
     try {
+      const idToken = await user.getIdToken();
       // Fetch all user financial data
       const snap = await get(ref(db, `users/${user.uid}`));
       const userData = snap.exists() ? snap.val() : {};
@@ -103,7 +102,7 @@ Rules:
 Financial data:
 ${JSON.stringify(summaryData, null, 2)}`;
 
-      const rawText = await callGeminiDirect(prompt);
+      const rawText = await callGeminiDirect(prompt, idToken);
 
       // Clean and parse JSON
       const cleaned = rawText.replace(/```json|```/g, "").trim();

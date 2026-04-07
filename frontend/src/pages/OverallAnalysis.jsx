@@ -10,19 +10,26 @@ import { Sparkles, Download, RefreshCw, Calendar } from "lucide-react";
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 const COLORS = ["#6366f1","#22d3ee","#f59e0b","#10b981","#ef4444","#8b5cf6","#f43f5e","#0ea5e9"];
 
-async function callGemini(promptText, idToken) {
-  const res = await fetch(`${API_BASE}/api/gemini/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
-    },
-    body: JSON.stringify({ prompt: promptText, data: {} }),
-  });
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+async function callGemini(promptText) {
+  if (!GEMINI_API_KEY) throw new Error("Gemini API key not set. Add VITE_GEMINI_API_KEY to your .env file.");
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
+      }),
+    }
+  );
   if (!res.ok) throw new Error("Gemini API error: " + res.status);
   const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data.result;
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("Empty response from Gemini");
+  return text;
 }
 
 const MONTHS = [
@@ -131,6 +138,21 @@ export default function OverallAnalysis() {
         savingsGoals: savings.map(s => ({ name: s.name, target: s.target, saved: s.saved })),
       };
 
+// Truncate to avoid token overflow
+      const truncatedPayload = {
+        ...summaryPayload,
+        expensesByCategory: Object.fromEntries(
+          Object.entries(summaryPayload.expensesByCategory).slice(0, 15)
+        ),
+        expensesByMonth: Object.fromEntries(
+          Object.entries(summaryPayload.expensesByMonth).slice(0, 12)
+        ),
+        incomeByMonth: Object.fromEntries(
+          Object.entries(summaryPayload.incomeByMonth).slice(0, 12)
+        ),
+        savingsGoals: summaryPayload.savingsGoals.slice(0, 10),
+      };
+
       const prompt = `You are an expert personal finance analyst. Given the user's financial data for the period "${filterDesc}", generate a comprehensive financial analysis report.
 
 Return ONLY valid JSON (no markdown fences, no text outside JSON) with exactly this structure:
@@ -174,9 +196,9 @@ Return ONLY valid JSON (no markdown fences, no text outside JSON) with exactly t
 Use real numbers only from the data. If no data for a month, skip it.
 
 User financial data:
-${JSON.stringify(summaryPayload, null, 2)}`;
+${JSON.stringify(truncatedPayload, null, 2)}`;
 
-      const rawText = await callGemini(prompt, idToken);
+      const rawText = await callGemini(prompt);
       const cleaned = rawText.replace(/```json|```/g, "").trim();
       const parsed  = JSON.parse(cleaned);
 

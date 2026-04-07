@@ -47,6 +47,7 @@ backend/src/main/resources/firebase-service-account.json
 # -----------------------
 # Editor / OS / IDE
 # -----------------------
+.sfdx/
 .vscode/
 !.vscode/extensions.json
 .idea/

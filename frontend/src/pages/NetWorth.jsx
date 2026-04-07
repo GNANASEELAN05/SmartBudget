@@ -1033,6 +1033,10 @@ Generate six realistic net-worth numbers (INR) for the last 6 periods (most rece
           box-sizing: border-box;
         }
       `}</style>
+
+      {/* ── Gemini AI Insight Graph ── */}
+      <GeminiInsightChart pageContext="networth" />
+
     </div>
   );
 }

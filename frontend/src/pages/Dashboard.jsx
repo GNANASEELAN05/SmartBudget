@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue, off } from "firebase/database";
+import GeminiInsightChart from "../components/GeminiInsightChart";
 import {
   Wallet,
   TrendingUp,
@@ -578,6 +579,9 @@ export default function DashboardFixed({
           }
         }
       `}</style>
+
+            {/* ── Gemini AI Insight Graph ── */}
+      <GeminiInsightChart pageContext="dashboard" />
     </div>
   );
 }

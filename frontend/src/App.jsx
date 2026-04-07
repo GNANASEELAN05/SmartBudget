@@ -27,6 +27,7 @@ import Income from "./pages/Income";
 import ExportData from "./pages/ExportData";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
+import OverallAnalysis from "./pages/OverallAnalysis";
 /* ============================================ */
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/export" element={<ExportData />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
+        <Route path="/overall-analysis" element={<OverallAnalysis />} />
       </Route>
     </Routes>
   );

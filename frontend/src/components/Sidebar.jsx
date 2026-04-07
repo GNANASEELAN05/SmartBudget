@@ -78,6 +78,7 @@ export default function Sidebar() {
         { name: "Analytics", icon: BarChart2, path: "/analytics" },
         { name: "Reports", icon: FileText, path: "/reports" },
         { name: "Trends", icon: TrendingUp, path: "/trends" },
+        { name: "Overall Analysis", icon: BarChart2, path: "/overall-analysis" },
       ],
     },
     {

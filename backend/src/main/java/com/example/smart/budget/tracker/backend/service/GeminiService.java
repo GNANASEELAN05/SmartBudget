@@ -1,5 +1,8 @@
 package com.example.smart.budget.tracker.backend.service;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,22 +14,31 @@ import java.net.http.HttpResponse;
 @Service
 public class GeminiService {
 
-    @Value("${gemini.api.key}")
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
+
+    @Value("${gemini.api.key:}")
     private String geminiApiKey;
 
     private static final String GEMINI_URL =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
 
-    /**
-     * Sends a prompt + data context to Gemini and returns the text response.
-     * Uses only java.net.http — no Jackson, no extra dependencies.
-     */
+    @PostConstruct
+    public void init() {
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            log.warn("⚠️ GEMINI_API_KEY is not set. Gemini features will not work.");
+        } else {
+            log.info("✅ Gemini API key loaded successfully");
+        }
+    }
+
     public String callGemini(String prompt, Object data) throws Exception {
-        // Build data string safely
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            throw new RuntimeException("Gemini API key is not configured. Set GEMINI_API_KEY environment variable on Render.");
+        }
+
         String dataStr = data != null ? data.toString() : "{}";
         String fullPrompt = prompt + "\n\nUser financial data:\n" + dataStr;
 
-        // Manually escape the prompt for JSON (handles quotes, newlines, backslashes)
         String escapedPrompt = fullPrompt
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
@@ -52,8 +64,6 @@ public class GeminiService {
             throw new RuntimeException("Gemini API error: " + response.statusCode() + " " + response.body());
         }
 
-        // Simple text extraction without Jackson:
-        // Response format: {"candidates":[{"content":{"parts":[{"text":"..."}]}}]}
         String body = response.body();
         int textIdx = body.indexOf("\"text\":");
         if (textIdx == -1) throw new RuntimeException("No text in Gemini response: " + body);
@@ -62,7 +72,6 @@ public class GeminiService {
         int end = body.lastIndexOf("\"");
         if (start <= 0 || end <= start) throw new RuntimeException("Could not parse Gemini response: " + body);
 
-        // Unescape JSON string
         return body.substring(start, end)
             .replace("\\n", "\n")
             .replace("\\\"", "\"")

@@ -2,7 +2,6 @@ package com.example.smart.budget.tracker.backend.controller;
 
 import com.example.smart.budget.tracker.backend.service.GeminiService;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
